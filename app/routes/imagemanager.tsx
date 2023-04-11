@@ -35,6 +35,7 @@ export default function imagemanager() {
     const [ url, setUrl ] = useState("");
     const urlRef = React.useRef<HTMLTextAreaElement>(url);
     const formUploadRef = React.useRef<HTMLTextAreaElement>(null);
+    const fileNewNameRef = React.useRef<HTMLTextAreaElement>(null);
     const [filesData, setFilesData] = useState([]);
     const [file, setfile] = useState([]);
     const [user, setUser] = useState(data.userId);
@@ -42,6 +43,9 @@ export default function imagemanager() {
     const newFolderRef = React.useRef<HTMLTextAreaElement>(null);
     const uploadTxtRef = React.useRef<HTMLTextAreaElement>(null);
     const [show, setShow] = useState(false);
+    const [showRenomear, setShowRenomear] = useState(false);
+    const [fileCopyAction, setFileCopyAction] = useState('');
+    
     
     useEffect(() => {
         // setUser(data.userId);
@@ -90,6 +94,26 @@ export default function imagemanager() {
           });
           list_files(user)
           setShow(false)
+    };
+
+    const handleSubmit_rename = async (e: any) => {
+        e.preventDefault();
+        let url_ = url
+        let a = url_.split('/')
+        a.pop()
+        let b = a.join('/')
+
+        let bb = url
+        let cc = b + '/' + fileNewNameRef.current?.value
+
+        console.log('rename:', bb, cc);
+        const { data, error } = await supabase
+            .storage
+            .from('files')
+            .move(user + bb, user + cc)
+            console.log(error);
+        setShowRenomear(false)
+        setUrl(cc)
     };
 
     const newFolder = async (name) => {
@@ -164,6 +188,22 @@ export default function imagemanager() {
         console.log(show);    
     }
 
+    const fileCopyDo = async () => {
+        // let url_ = url
+        // url_.split('/').pop()
+        // url_ = url_.join('/')
+        console.log(user + fileCopyAction, user + url + fileCopyAction);
+        
+        const { data, error } = await supabase
+            .storage
+            .from('files')
+            .copy(user + fileCopyAction, user + url + fileCopyAction)
+            console.log(error);
+        fileCopyAction('')
+        //setShowRenomear(false)
+        //setUrl(cc)
+    }
+
     return (
         <div >
             <div className=' text-white ' style={{width: '80%', margin: 'auto', marginTop: '10px'}}>
@@ -171,9 +211,62 @@ export default function imagemanager() {
             </div>
            
             {/* <h1>File manager</h1>{url}[{urlType}]<br/> */}
-            
+            {/* <Modal title="Copiar arquivo" show={showCopiar} setShow={setShowCopiar} showFooterButtons={false}>
+                <Form
+                   
+                    name="form_copiar"
+                    method="post"
+                    onSubmit={handleSubmit_copy}
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                        width: "100%",
+                    }}
+                    >
+                    <div>
+                        <Form.Group className="mb-3" controlId="formBasicEmail">
+                            <Form.Label>Digite o novo nome</Form.Label>
+                            <Form.Control type="text" ref={fileNewNameRef} defaultValue={url.split('/').pop()}  name="fileNewName"/>
+                        </Form.Group>
+                        <button
+                            type="submit"
+                            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
+                            >
+                            Renomear arquivo
+                        </button>
+                    </div>
+                </Form>
+            </Modal> */}
+            <Modal title="Renomear arquivo" show={showRenomear} setShow={setShowRenomear} showFooterButtons={false}>
+                <Form
+                   
+                    name="form_rename"
+                    method="post"
+                    onSubmit={handleSubmit_rename}
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                        width: "100%",
+                    }}
+                    >
+                    <div>
+                        <Form.Group className="mb-3" controlId="formBasicEmail">
+                            <Form.Label>Digite o novo nome</Form.Label>
+                            <Form.Control type="text" ref={fileNewNameRef} defaultValue={url.split('/').pop()}  name="fileNewName"/>
+                        </Form.Group>
+                        <button
+                            type="submit"
+                            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
+                            >
+                            Renomear arquivo
+                        </button>
+                    </div>
+                </Form>
+            </Modal>
             <Modal title="Enviar arquivo" show={show} setShow={setShow} showFooterButtons={false}>
-            <Form
+                <Form
                     ref={formUploadRef}
                     name="form1"
                     method="post"
@@ -202,10 +295,10 @@ export default function imagemanager() {
                         <input type="file"  />
                         </label> */}
                         <button
-                        type="submit"
-                        className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
-                        >
-                        Enviar arquivo
+                            type="submit"
+                            className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
+                            >
+                            Enviar arquivo
                         </button>
                     </div>
                 </Form>
@@ -259,6 +352,11 @@ export default function imagemanager() {
                   
                 </InputGroup>
                 <br/>
+                {fileCopyAction&&
+                        <Button  variant="secondary" onClick={() => fileCopyDo()}>
+                            Colar
+                        </Button>
+                        }
                 <Row xs={1} md={4} className="g-4">
                 {urlType!=='file'&&filesData.filter((x)=>!x.name.includes('undefined')&&x.name!=='.initial').map((image) => {
                     return (
@@ -299,12 +397,15 @@ export default function imagemanager() {
                     <>
                     <div className='w-100 d-flex justify-content-center mb-3'>
                     <ButtonGroup aria-label="Basic example">
-                        <Button variant="secondary" onClick={() => goDelete()}>
+                        <Button variant="secondary" onClick={() => setShowRenomear(true)}>
                             Renomear
                         </Button>
-                        <Button  variant="secondary" onClick={() => goDelete()}>
+                        {!fileCopyAction&&
+                        <Button  variant="secondary" onClick={() => setFileCopyAction(url)}>
                             Copiar
                         </Button>
+                        }
+                        
                         <Button variant="secondary" onClick={() => goDelete()}>
                             Mover
                         </Button> 
