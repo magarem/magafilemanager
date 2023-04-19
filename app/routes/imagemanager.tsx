@@ -45,7 +45,7 @@ export default function imagemanager() {
     const [show, setShow] = useState(false);
     const [showRenomear, setShowRenomear] = useState(false);
     const [fileCopyAction, setFileCopyAction] = useState('');
-    
+    const [selectFile, setSelectFile] = useState('');
     
     useEffect(() => {
         // setUser(data.userId);
@@ -66,9 +66,8 @@ export default function imagemanager() {
 
 
     const list_files = async () => {
-        
         console.log(user, url);
-
+        setFilesData([])
         const { data, error } = await supabase
           .storage
           .from('files')
@@ -77,12 +76,11 @@ export default function imagemanager() {
             offset: 0,
             sortBy: { column: 'name', order: 'asc' }
           })
-      
         console.log(data);
-        
         setFilesData(data)
     }
 
+    
     const handleSubmit = async (e: any) => {
         e.preventDefault();
         const filename = `${uuidv4()}-${file.name}`;
@@ -124,6 +122,24 @@ export default function imagemanager() {
             upsert: false,
           });
           list_files(user)
+    }
+
+    const deleteFolder = async ()  => {
+       console.log('::', user + url + '/*');
+       
+        if (confirm('Confirma exclusão do arquivo:' + url)){
+            const { data, error } = await supabase
+            .storage
+            .from('files')
+            .remove([user + url + '/.initial'])
+            console.log(data, error);
+        
+            if(error) {
+            alert(error);
+            } else {
+            back()
+            }
+        }   
     }
 
     const deleteImage = async (imageName)  => {
@@ -192,24 +208,45 @@ export default function imagemanager() {
         // let url_ = url
         // url_.split('/').pop()
         // url_ = url_.join('/')
-        console.log(user + fileCopyAction, user + url + fileCopyAction);
+        let fileCopyAction_ = fileCopyAction
+        let fileName = fileCopyAction_.split('/').pop()
+        console.log(user + fileCopyAction, user + url + '/' + fileName);
+
         
         const { data, error } = await supabase
             .storage
             .from('files')
-            .copy(user + fileCopyAction, user + url + fileCopyAction)
+            .copy(user + fileCopyAction, user + url + '/' + fileName)
             console.log(error);
-        fileCopyAction('')
-        //setShowRenomear(false)
-        //setUrl(cc)
+            setFileCopyAction('')
+            list_files()
+            //setShowRenomear(false)
+            //setUrl(cc)
+    }
+
+    const movePaste = async () => {
+      
+        let selectFile_ = selectFile
+        let fileName = selectFile_.split('/').pop()
+        console.log(user + selectFile, user + url + '/' + fileName);
+        
+        const { data, error } = await supabase
+            .storage
+            .from('files')
+            .move(user + selectFile, user + url + '/' + fileName)
+            console.log(error);
+            setSelectFile('')
+            list_files()
+          
     }
 
     return (
         <div >
+            
             <div className=' text-white ' style={{width: '80%', margin: 'auto', marginTop: '10px'}}>
                 <h2>Gerenciador de arquivos</h2>
             </div>
-           
+            selectFile:{selectFile}
             {/* <h1>File manager</h1>{url}[{urlType}]<br/> */}
             {/* <Modal title="Copiar arquivo" show={showCopiar} setShow={setShowCopiar} showFooterButtons={false}>
                 <Form
@@ -306,6 +343,7 @@ export default function imagemanager() {
             {/* <Button variant="primary" onClick={()=>teste()}>
               vai!
             </Button> */}
+            
             {uploadTxtRef.current?.value}
             <div style={{width: '80%', margin: 'auto', marginTop: '10px'}}>
                 <InputGroup className="mb-3">
@@ -344,21 +382,36 @@ export default function imagemanager() {
                             title="Comandos"
                             id="bg-vertical-dropdown-1"
                         >
+                            {urlType=="folder"&&fileCopyAction&&
+                                <Dropdown.Item eventKey="3" onClick={() => fileCopyDo()}>Colar</Dropdown.Item>
+                            }
+                            
+                            {urlType=="folder"&&selectFile&&
+                                <Dropdown.Item eventKey="3" onClick={() => movePaste()}>Colar</Dropdown.Item>
+                            }
                             <Dropdown.Item eventKey="1" onClick={() => goNewFolder()}>Nova pasta</Dropdown.Item>
                             <Dropdown.Item eventKey="2" onClick={() => goUpload()}>Enviar arquivo</Dropdown.Item>
+                            <Dropdown.Item eventKey="3" onClick={() => deleteFolder()}>Excluir pasta</Dropdown.Item>
                         </DropdownButton>
                         </>
                     }
                   
                 </InputGroup>
                 <br/>
-                {fileCopyAction&&
-                        <Button  variant="secondary" onClick={() => fileCopyDo()}>
-                            Colar
-                        </Button>
-                        }
+                {/* {urlType=="folder"&&fileCopyAction&&
+                    <Button variant="secondary" onClick={() => fileCopyDo()}>
+                        Colar
+                    </Button>
+                }
+
+                {urlType=="folder"&&selectFile&&
+                    <Button  variant="secondary" onClick={() => movePaste()}>
+                        Colar
+                    </Button>
+                } */}
+
                 <Row xs={1} md={4} className="g-4">
-                {urlType!=='file'&&filesData.filter((x)=>!x.name.includes('undefined')&&x.name!=='.initial').map((image) => {
+                {urlType!=='img'&&filesData.filter((x)=>!x.name.includes('undefined')&&x.name!=='.initial').map((image) => {
                     return (
                     <Col key={CDNURL + "/" + image.name}>
                      {!image.id?
@@ -405,10 +458,11 @@ export default function imagemanager() {
                             Copiar
                         </Button>
                         }
-                        
-                        <Button variant="secondary" onClick={() => goDelete()}>
-                            Mover
-                        </Button> 
+                        {!selectFile&&
+                        <Button  variant="secondary" onClick={() => setSelectFile(url)}>
+                            Cortar
+                        </Button>
+                        }
                         <Button variant="danger" onClick={() => goDelete()}>
                             Excluir  
                         </Button>
