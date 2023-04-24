@@ -76,15 +76,16 @@ export default function LoginPage() {
   }, [actionData]);
 
   return (
-    <div className="flex min-h-full flex-col justify-center">
+    <div className="flex mt-20 min-h-full flex-col justify-center">
       <div className="mx-auto w-full max-w-md px-8">
         <Form method="post" className="space-y-6">
+          <div className="flex w-full justify-center text-white"><h3>Entrar</h3></div>
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-white"
             >
-              Email address
+              Email
             </label>
             <div className="mt-1">
               <input
@@ -110,9 +111,9 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-white"
             >
-              Password
+              Senha
             </label>
             <div className="mt-1">
               <input
@@ -138,7 +139,7 @@ export default function LoginPage() {
             type="submit"
             className="w-full rounded bg-blue-500  px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
           >
-            Log in
+            Entrar
           </button>
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -150,13 +151,13 @@ export default function LoginPage() {
               />
               <label
                 htmlFor="remember"
-                className="ml-2 block text-sm text-gray-900"
+                className="ml-2 block text-sm text-gray-100"
               >
-                Remember me
+                Lembrar
               </label>
             </div>
             <div className="text-center text-sm text-gray-500">
-              Don't have an account?{" "}
+              Ainda não tem conta?{" "}
               <Link
                 className="text-blue-500 underline"
                 to={{
@@ -164,7 +165,7 @@ export default function LoginPage() {
                   search: searchParams.toString(),
                 }}
               >
-                Sign up
+                Registrar
               </Link>
             </div>
           </div>

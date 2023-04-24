@@ -83,14 +83,15 @@ export default function Join() {
 
   return (
     <div className="flex min-h-full flex-col justify-center">
-      <div className="mx-auto w-full max-w-md px-8">
+      <div className="mx-auto pt-20 w-full max-w-md px-8">
         <Form method="post" className="space-y-6">
+          <div className="flex w-full justify-center text-white"><h3>Registrar</h3></div>
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-white"
             >
-              Email address
+              Email
             </label>
             <div className="mt-1">
               <input
@@ -116,9 +117,9 @@ export default function Join() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-white"
             >
-              Password
+              Senha
             </label>
             <div className="mt-1">
               <input
@@ -144,11 +145,11 @@ export default function Join() {
             type="submit"
             className="w-full rounded bg-blue-500  px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
           >
-            Create Account
+            Registrar
           </button>
           <div className="flex items-center justify-center">
             <div className="text-center text-sm text-gray-500">
-              Already have an account?{" "}
+              Já tem uma conta?{" "}
               <Link
                 className="text-blue-500 underline"
                 to={{
@@ -156,7 +157,7 @@ export default function Join() {
                   search: searchParams.toString(),
                 }}
               >
-                Log in
+                Entrar
               </Link>
             </div>
           </div>

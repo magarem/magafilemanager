@@ -16,12 +16,14 @@ export function getNote({
   });
 }
 
-export function getNoteListItems({ userId }: { userId: User["id"] }) {
-  return prisma.note.findMany({
+export async function getNoteListItems({ userId }: { userId: User["id"] }) {
+  console.log('userId', userId);
+  
+  return await prisma.note.findMany({
     where: { userId },
     select: { id: true, title: true },
     orderBy: { updatedAt: "desc" },
-  });
+  })||[];
 }
 
 export function updateNote(obj: object & {userId: User["id"]}) {
@@ -80,13 +82,13 @@ export function createNote({
   userId: User["id"];
 }) {
 
-  var name = "data/" + generateUID() + '_' + dataAtualFormatada + '__' + slugify(title) + ".md"
-  console.log(name);
+  // var name = "data/" + generateUID() + '_' + dataAtualFormatada + '__' + slugify(title) + ".md"
+  // console.log(name);
  
-  var writeStream = fs.createWriteStream(name);
-  writeStream.write(body);
+  // var writeStream = fs.createWriteStream(name);
+  // writeStream.write(body);
   // writeStream.write("Thank You.");
-  writeStream.end();
+  // writeStream.end();
   return prisma.note.create({
     data: {
       title,

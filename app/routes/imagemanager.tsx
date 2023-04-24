@@ -13,27 +13,69 @@ import { useLoaderData, useSearchParams } from '@remix-run/react';
 import { TfiHome , TfiArrowCircleLeft, TfiClipboard, TfiArrowCircleRight} from "react-icons/tfi";
 import { FiFolderPlus } from "react-icons/fi";
 import { RiFolderUploadLine } from "react-icons/ri";
-const CDNURL = "https://lpbqbqcmlspixeiikhcb.supabase.co/storage/v1/object/public/files/";
-const supabase = createClient('https://lpbqbqcmlspixeiikhcb.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYnFicWNtbHNwaXhlaWlraGNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODA2NDU1ODksImV4cCI6MTk5NjIyMTU4OX0.EIGOPYgY4iebJJ1jpJNCoioJZSE9XU83ZPWUhCsgUSk', {
-    db: {
-      schema: 'custom',
-    },
-    auth: {
-      persistSession: true,
-    },
-  })
+import { createServerClient } from '@supabase/auth-helpers-remix'
+// import type { LoaderArgs } from '@remix-run/node' // change this import to whatever runtime you are using
 
-export async function loader({ request }: LoaderArgs) {
+const CDNURL = "https://jrppesgzrtbbqriuypku.supabase.co/storage/v1/object/public/files/";
+// const supabase = createClient('https://jrppesgzrtbbqriuypku.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpycHBlc2d6cnRiYnFyaXV5cGt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODIwMjYwMDksImV4cCI6MTk5NzYwMjAwOX0.mVBmQ2FuHX5r4vfrsllMAVZJrrIb3Bx-HjJWyz3HNCo', {
+//     db: {
+//       schema: 'custom',
+//     },
+//     auth: {
+//       persistSession: true,
+//     },
+//   })
+
+// const supabaseUrl = 'https://jrppesgzrtbbqriuypku.supabase.co'
+// const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpycHBlc2d6cnRiYnFyaXV5cGt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODIwMjYwMDksImV4cCI6MTk5NzYwMjAwOX0.mVBmQ2FuHX5r4vfrsllMAVZJrrIb3Bx-HjJWyz3HNCo'//process.env.SUPABASE_KEY
+// const supabase = createClient(supabaseUrl, supabaseKey)
+
+
+// export const loader = async ({ request }: LoaderArgs) => {
+//     const response = new Response()
+//     const supabase = createServerClient(
+//       process.env.SUPABASE_URL!,
+//       process.env.SUPABASE_ANON_KEY!,
+//       { request, response }
+//     )
+//     const userId = await getUserId(request);
+//     console.log("userID:", userId);
+    
+//     const {data: { session }} = await supabase.auth.getSession()
+
+//     console.log("session:", session?.user);
+//     // const { data } = await supabaseClient.from('test').select('*')
+//     // 
+//     return json(
+//       { userId: userId,
+//         supabase},
+//       {
+//         headers: response.headers,
+//       }
+//     )
+//   }
+
+export const loader = async ({request}: LoaderArgs) => {
     const userId = await getUserId(request);
-    console.log(1, userId);
-    return json({userId: userId});
-}
+    const env = {
+      SUPABASE_URL_RAW: process.env.SUPABASE_URL_RAW!,
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
+    }
+  
+    return json({ userId, env })
+  }
+
+// export async function loader({ request }: LoaderArgs) {
+//     const userId = await getUserId(request);
+//     console.log(1, userId);
+//     return json({userId: userId});
+// }
 
 export default function imagemanager() {
-    let submit = useSubmit();
+    // let submit = useSubmit();
     const data = useLoaderData<typeof loader>();
     const [ url, setUrl ] = useState("");
-    const urlRef = React.useRef<HTMLTextAreaElement>(url);
+    const urlRef = React.useRef<HTMLTextAreaElement>(null);
     const formUploadRef = React.useRef<HTMLTextAreaElement>(null);
     const fileNewNameRef = React.useRef<HTMLTextAreaElement>(null);
     const [filesData, setFilesData] = useState([]);
@@ -45,16 +87,33 @@ export default function imagemanager() {
     const [show, setShow] = useState(false);
     const [showRenomear, setShowRenomear] = useState(false);
     const [fileCopyAction, setFileCopyAction] = useState('');
+    const [folderCopyAction, setFolderCopyAction] = useState('');
     const [selectFile, setSelectFile] = useState('');
-    
+
+    const bucket = 'files'
+
+
+    const supabase = createClient(data.env.SUPABASE_URL_RAW, data.env.SUPABASE_ANON_KEY, {
+        db: {
+            schema: 'custom',
+        },
+        auth: {
+            persistSession: true,
+        },
+    })
+
     useEffect(() => {
         // setUser(data.userId);
-        list_files()
+        list_files("","")
     },[])
 
     useEffect(() => {
+        // alert('!')
         console.log(url);
-        list_files()
+        (urlRef as any).current.value = url
+        
+         // if (url[0]=='/') setUrl(url.substring(1))
+        // list_files(url)
     },[url])
 
     const handleFileSelected = (e) => {
@@ -63,15 +122,46 @@ export default function imagemanager() {
         // submit(formUploadRef)
     };
 
-
-
-    const list_files = async () => {
-        console.log(user, url);
+    const list_files = async (url_: any, folder: any) => {
+        setUrl('')
+        console.log(user, url_, folder);
         setFilesData([])
+       
+        let target
+        if (url_==''&&folder==''){
+            target = user
+        }
+        if (url_==''&&folder!==''){
+            setUrl(folder)
+            target = user + '/' + folder
+        }
+        if (url_!==''&&folder!==''){
+            setUrl(url_ + '/' + folder)
+            target =  user + '/' + url_ + '/' + folder
+        }
+
+        
+        
+        // url = user + '/' + url
+        // a = a.replace("//","/")
+       
+        // let url_ =  '/' + a
+        
+        // if (url_=='/'){
+        //     url_ = ''
+        // }
+
+        // setUrl(a)
+        console.log('target:', target);
+        
+        // setUrl(url);
+    
+        // let url_ = user + a
+        // if (url_[0]=='/') url_ = url_.substring(1)
         const { data, error } = await supabase
           .storage
-          .from('files')
-          .list(user + url, {
+          .from(bucket)
+          .list(target, {
             limit: 100,
             offset: 0,
             sortBy: { column: 'name', order: 'asc' }
@@ -79,18 +169,17 @@ export default function imagemanager() {
         console.log(data);
         setFilesData(data)
     }
-
     
     const handleSubmit = async (e: any) => {
         e.preventDefault();
         const filename = `${uuidv4()}-${file.name}`;
         const { data, error } = await supabase.storage
-          .from("files")
+          .from(bucket)
           .upload(user + '/' + url + '/' + filename, file, {
             cacheControl: "3600",
             upsert: false,
           });
-          list_files(user)
+          list_files('', url)
           setShow(false)
     };
 
@@ -105,35 +194,39 @@ export default function imagemanager() {
         let cc = b + '/' + fileNewNameRef.current?.value
 
         console.log('rename:', bb, cc);
+        console.log(user + '/' + bb, user + '/' + cc);
+        
+        let origem = (bb[0]=='/')? user + bb : user + '/' + bb
+        let destino = (cc[0]=='/')? user + cc : user + '/' + cc
+        
         const { data, error } = await supabase
             .storage
-            .from('files')
-            .move(user + bb, user + cc)
+            .from(bucket)
+            .move(origem, destino)
             console.log(error);
         setShowRenomear(false)
         setUrl(cc)
+        // list_files(bb, cc)
     };
 
     const newFolder = async (name) => {
         const { data, error } = await supabase.storage
-          .from("files")
+          .from(bucket)
           .upload(user + '/' + url + '/' + name + '/.initial', '', {
             cacheControl: "3600",
             upsert: false,
           });
-          list_files(user)
+          list_files('', url)
     }
 
     const deleteFolder = async ()  => {
-       console.log('::', user + url + '/*');
-       
-        if (confirm('Confirma exclusão do arquivo:' + url)){
+        console.log('::', user + url + '/*');
+        if (confirm('Confirma exclusão da pasta:' + url)){
             const { data, error } = await supabase
             .storage
-            .from('files')
-            .remove([user + url + '/.initial'])
+            .from(bucket)
+            .remove([user + '/' + url + '/.initial'])
             console.log(data, error);
-        
             if(error) {
             alert(error);
             } else {
@@ -147,7 +240,7 @@ export default function imagemanager() {
         if (confirm('Confirma exclusão do arquivo:' + imageName)){
           const { data, error } = await supabase
         .storage
-        .from('files')
+        .from(bucket)
         .remove([user + url])
       
         // const { data, error } = await supabase
@@ -174,19 +267,32 @@ export default function imagemanager() {
         alert('Text copied');
     }
 
+    const handleClick = event => {
+        if (event.detail === 2) {
+          console.log('double click');
+        }
+      };
+      
     const goUrl = async () => {
-        setUrl(urlRef.current?.value)
+        // console.log("!");
+        (urlRef as any).current.value = ''
+        setUrl(urlRef.current.value)
+        // if (url[0]=='/') setUrl(url.substring(1))
+        // list_files()
     }
 
     const goHome = async () => {
-        setUrl("")
+        (urlRef as any).current.value = ''
+        // setUrl("")
         setUrlType('folder')
+        list_files("","")
     }
 
     const back = async () => {
         let a = url.split('/')
         let b = a.slice(0,-1).join('/')
-        setUrl(b)
+        // setUrl(b)
+        list_files('', b)
         setUrlType('folder')
     }
 
@@ -204,49 +310,59 @@ export default function imagemanager() {
         console.log(show);    
     }
 
-    const fileCopyDo = async () => {
-        // let url_ = url
-        // url_.split('/').pop()
-        // url_ = url_.join('/')
-        let fileCopyAction_ = fileCopyAction
-        let fileName = fileCopyAction_.split('/').pop()
-        console.log(user + fileCopyAction, user + url + '/' + fileName);
-
-        
+    const folderCopyDo = async () => {
+       
+        // let fileCopyAction_ = fileCopyAction
+        // let fileName = fileCopyAction_.split('/').pop()
+        console.log('folderCopyDo:', user + '/' + folderCopyAction, user + '/' + url);  
         const { data, error } = await supabase
             .storage
-            .from('files')
-            .copy(user + fileCopyAction, user + url + '/' + fileName)
+            .from(bucket)
+            .copy(user + '/' + folderCopyAction, user + '/' + url)
+            console.log(error);
+            setFolderCopyAction('')
+            list_files('', url)
+    }
+
+    const fileCopyDo = async () => {
+       
+        let fileCopyAction_ = fileCopyAction
+        let fileName = fileCopyAction_.split('/').pop()
+        console.log('fileCopyDo:', user + fileCopyAction, user + '/' + url + '/' + fileName);  
+        const { data, error } = await supabase
+            .storage
+            .from(bucket)
+            .copy(user + fileCopyAction, user + '/' + url + '/' + fileName)
             console.log(error);
             setFileCopyAction('')
-            list_files()
-            //setShowRenomear(false)
-            //setUrl(cc)
+            list_files('', url)
     }
 
     const movePaste = async () => {
-      
         let selectFile_ = selectFile
         let fileName = selectFile_.split('/').pop()
         console.log(user + selectFile, user + url + '/' + fileName);
         
         const { data, error } = await supabase
             .storage
-            .from('files')
-            .move(user + selectFile, user + url + '/' + fileName)
+            .from(bucket)
+            .move(user + selectFile, user + '/' + url + '/' + fileName)
             console.log(error);
             setSelectFile('')
-            list_files()
-          
+            list_files('', url)
     }
 
     return (
         <div >
             
-            <div className=' text-white ' style={{width: '80%', margin: 'auto', marginTop: '10px'}}>
-                <h2>Gerenciador de arquivos</h2>
+            <div className=' text-white pt-10 text-center' style={{width: '80%', margin: 'auto'}}>
+                <h3>Gerenciador de arquivos</h3>
+                user: {user} url: {url} bucket: {bucket}<br/>
+                selectFile:{selectFile} fileCopyAction: {fileCopyAction}<br/>
+                folderCopyAction: {folderCopyAction}
+
             </div>
-            selectFile:{selectFile}
+            
             {/* <h1>File manager</h1>{url}[{urlType}]<br/> */}
             {/* <Modal title="Copiar arquivo" show={showCopiar} setShow={setShowCopiar} showFooterButtons={false}>
                 <Form
@@ -368,34 +484,55 @@ export default function imagemanager() {
                             <TfiArrowCircleRight/>
                         </Button>
                     </InputGroup.Text>
+
                     {(urlType=="img")&&
-                    <InputGroup.Text>
-                        <Button variant="primary" onClick={() =>  navigator.clipboard.writeText(urlRef.current.value)}>
-                            <TfiClipboard/>
-                        </Button>
-                    </InputGroup.Text>
+                        <InputGroup.Text>
+                            <Button variant="primary" onClick={() =>  navigator.clipboard.writeText(data.env.SUPABASE_URL_RAW + '/storage/v1/object/public/files/' + user + '/' + urlRef.current.value)}>
+                                <TfiClipboard/>
+                            </Button>
+                        </InputGroup.Text>
                     }
-                    {(urlType=="folder")&&
-                        <>
+                    {(urlType=="folder"||url==""||url=="/")&&
+                        <DropdownButton
+                        as={ButtonGroup}
+                        title="Comandos"
+                        id="bg-vertical-dropdown-1"
+                        >
+                        {/* {folderCopyAction?
+                            <Dropdown.Item eventKey="5" onClick={() => folderCopyDo()}>Colar pasta</Dropdown.Item>
+                            :
+                            <Dropdown.Item eventKey="5" onClick={() => setFolderCopyAction(url)}>Copiar pasta</Dropdown.Item>
+                        }  */}
+
+                        {urlType=="folder"&&fileCopyAction&&
+                            <Dropdown.Item eventKey="3" onClick={() => fileCopyDo()}>Colar</Dropdown.Item>
+                        }
+                        
+                        {urlType=="folder"&&selectFile&&
+                            <Dropdown.Item eventKey="3" onClick={() => movePaste()}>Colar</Dropdown.Item>
+                        }
+
+                        <Dropdown.Item eventKey="1" onClick={() => goNewFolder()}>Nova pasta</Dropdown.Item>
+                        <Dropdown.Item eventKey="2" onClick={() => goUpload()}>Enviar arquivo</Dropdown.Item>
+                        <Dropdown.Item eventKey="3" onClick={() => deleteFolder()}>Excluir pasta</Dropdown.Item>
+                        </DropdownButton>
+                    }
+                    {(urlType=="img")&&
                         <DropdownButton
                             as={ButtonGroup}
                             title="Comandos"
                             id="bg-vertical-dropdown-1"
                         >
-                            {urlType=="folder"&&fileCopyAction&&
-                                <Dropdown.Item eventKey="3" onClick={() => fileCopyDo()}>Colar</Dropdown.Item>
+                            <Dropdown.Item eventKey="4" onClick={() => setShowRenomear(true)}>Renomear arquivo</Dropdown.Item>
+                            {!fileCopyAction&&
+                                <Dropdown.Item eventKey="5" onClick={() => setFileCopyAction(url)}>Copiar arquivo</Dropdown.Item>
                             }
-                            
-                            {urlType=="folder"&&selectFile&&
-                                <Dropdown.Item eventKey="3" onClick={() => movePaste()}>Colar</Dropdown.Item>
+                            {!selectFile&&
+                                <Dropdown.Item eventKey="6" onClick={() => setSelectFile(url)}>Cortar arquivo</Dropdown.Item>
                             }
-                            <Dropdown.Item eventKey="1" onClick={() => goNewFolder()}>Nova pasta</Dropdown.Item>
-                            <Dropdown.Item eventKey="2" onClick={() => goUpload()}>Enviar arquivo</Dropdown.Item>
-                            <Dropdown.Item eventKey="3" onClick={() => deleteFolder()}>Excluir pasta</Dropdown.Item>
+                            <Dropdown.Item eventKey="6" onClick={() => goDelete()}>Excluir arquivo</Dropdown.Item>
                         </DropdownButton>
-                        </>
                     }
-                  
                 </InputGroup>
                 <br/>
                 {/* {urlType=="folder"&&fileCopyAction&&
@@ -415,20 +552,23 @@ export default function imagemanager() {
                     return (
                     <Col key={CDNURL + "/" + image.name}>
                      {!image.id?
-                        <Card style={{backgroundColor: '#19376D'}}>
-                            {/* <Card.Img variant="top" src="/img/folder2.png" style={{width: '50', height: '30'}} onClick={() => {setUrl(url + '/' + image.name); }} /> */}
-                            <Card.Body>
-                                <img src="/img/folder2.png" onClick={() => {setUrl(url + '/' + image.name); setUrlType('folder')}}  alt=""/>
-                                <InputGroup className="mb-3 pl-2" style={{color: 'white'}}>
-                                    {image.name}
-                                    {/* <InputGroup.Text id="basic-addon1">{image.name}</InputGroup.Text> */}
-                                </InputGroup>   
-                                {/* <Button key={CDNURL + "/" + image.name} variant="danger" onClick={() => deleteImage(image.name)}>Delete Image</Button> */}
-                            </Card.Body>
-                        </Card>
+                            <Card style={{backgroundColor: '#19376D'}} onClick={() => { setUrlType('folder'); list_files(url, image.name)}}>
+                                {/* <Card.Img variant="top" src="/img/folder2.png" style={{width: '50', height: '30'}} onClick={() => {setUrl(url + '/' + image.name); }} /> */}
+                                <Card.Body>
+                                {/* <Button onClick={() => { setUrlType('folder'); list_files(url, image.name)}}> */}
+                                    <img src="/img/folder2.png"  alt=""/>
+                                {/* </Button> */}
+                                   
+                                    <InputGroup className="mb-3 pl-2" style={{color: 'white'}}>
+                                        {image.name}
+                                        {/* <InputGroup.Text id="basic-addon1">{image.name}</InputGroup.Text> */}
+                                    </InputGroup>   
+                                    {/* <Button key={CDNURL + "/" + image.name} variant="danger" onClick={() => deleteImage(image.name)}>Delete Image</Button> */}
+                                </Card.Body>
+                            </Card>
                         :
                         <Card>
-                            <Card.Img variant="top" style={{width: '50vw', height: '30vh', objectFit: 'cover'}} src={CDNURL + "/" + user + '/' + url + '/' + image.name} onClick={() => {setUrlType('img'); setUrl(url + '/' + image.name)}} />
+                            <Card.Img variant="top" style={{width: '50vw', height: '38vh', objectFit: 'cover'}} src={CDNURL + "/" + user + '/' + url + '/' + image.name} onClick={() => {setUrlType('img'); setUrl(url + '/' + image.name)}} />
                             {/* <Card.Body> */}
                                 {/* <InputGroup className="mb-3">
                                     <InputGroup.Text id="basic-addon1">URL</InputGroup.Text>
@@ -448,7 +588,7 @@ export default function imagemanager() {
                 <div>
                 {urlType=='img'&&
                     <>
-                    <div className='w-100 d-flex justify-content-center mb-3'>
+                    {/* <div className='w-100 d-flex justify-content-center mb-3'>
                     <ButtonGroup aria-label="Basic example">
                         <Button variant="secondary" onClick={() => setShowRenomear(true)}>
                             Renomear
@@ -467,11 +607,13 @@ export default function imagemanager() {
                             Excluir  
                         </Button>
                     </ButtonGroup>
-                    </div>
+                    </div> */}
                         
-                        <div className='w-100 d-flex justify-content-center'>
+                        <div className='w-100 d-flex justify-content-center mt-2 mb-4'>
                             <img src={CDNURL + "/" +user + '/' + url} />
                         </div>
+                        
+
                     </>
                 }
                 </div>

@@ -175,13 +175,13 @@ const deleteImage = async (imageName)  => {
         }}
       >
         <div>
-          <label className="flex w-full flex-col gap-1">
-            <span>Title: </span>
+          <label className="flex w-full flex-col gap-1  text-gray-50">
+            <span>Titulo: </span>
             <input
               ref={titleRef}
               id="title"
               name="title"
-              className="flex-1 rounded-md border-2 border-blue-500 px-3 text-lg leading-loose"
+              className="w-full flex-1 rounded-md border-0 text-gray-50 bg-slate-700 border-slate-800 px-2 py-2 !outline-none text-lg leading-6"
               aria-invalid={actionData?.errors?.title ? true : undefined}
               aria-errormessage={
                 actionData?.errors?.title ? "title-error" : undefined
@@ -196,13 +196,13 @@ const deleteImage = async (imageName)  => {
         </div>
 
         <div>
-          <label className="flex w-full flex-col gap-1">
-            <span>Body: </span>
+          <label className="flex w-full flex-col gap-1  text-gray-50">
+            <span>Texto: </span>
             <textarea
               ref={bodyRef}
               name="body"
               rows={8}
-              className="w-full flex-1 rounded-md border-2 border-blue-500 px-3 py-2 text-lg leading-6"
+              className="w-full flex-1 rounded-md border-0 text-gray-50 bg-slate-700 border-slate-800 px-2 py-2 !outline-none text-lg leading-6"
               aria-invalid={actionData?.errors?.body ? true : undefined}
               aria-errormessage={
                 actionData?.errors?.body ? "body-error" : undefined
@@ -218,12 +218,12 @@ const deleteImage = async (imageName)  => {
         </div>
 
         <div>
-        <label className="flex w-full flex-col gap-1">
-          <span>Img: </span>
+        <label className="flex w-full flex-col gap-1  text-gray-50">
+          <span>Imagem: </span>
           <input
             ref={imageRef}
             name="image"
-            className="flex-1 rounded-md border-2 border-blue-500 px-3 text-lg leading-loose"
+            className="w-full flex-1 rounded-md border-0 text-gray-50 bg-slate-700 border-slate-800 px-2 py-2 !outline-none text-lg leading-6"
           />
         </label>
       </div>
@@ -235,12 +235,12 @@ const deleteImage = async (imageName)  => {
           </label>
         </div> */}
 
-        <div className="text-right">
+        <div className="text-left mt-3">
           <button
             type="submit"
             className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
           >
-            Save
+            Salvar
           </button>
           
         </div>

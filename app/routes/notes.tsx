@@ -18,42 +18,42 @@ export default function NotesPage() {
 
   return (
     <div className="flex h-full min-h-screen flex-col">
-      <header className="flex items-center justify-between bg-slate-800 p-4 text-white">
-        <h1 className="text-3xl font-bold">
-          <Link to=".">Notes</Link>
-        </h1>
-        <p>{user.email}</p>
+      <header className="flex pt-6 items-center justify-between bg-slate-800 p-2 text-white no-underline">
+        <h5 className="text-1xl font-sans	pt-1 pl-2">
+          <Link to="." className="no-underline text-yellow-500">MW Notes</Link>
+        </h5>
+        {/* <p className="pt-2 text-xs">{user.email}</p> */}
         <Form action="/logout" method="post">
           <button
             type="submit"
-            className="rounded bg-slate-600 px-4 py-2 text-blue-100 hover:bg-blue-500 active:bg-blue-600"
+            className="rounded bg-slate-600 px-4 py-1 text-blue-100 hover:bg-blue-500 active:bg-blue-600 text-xs"
           >
-            Logout
+            {user.email}
           </button>
         </Form>
       </header>
 
-      <main className="flex h-full bg-white">
-        <div className="h-full w-80 border-r bg-gray-50">
-          <Link to="new" className="block p-4 text-xl text-blue-500">
-            + New Note
+      <main className="flex h-full">
+        <div className="h-full w-81 ">
+          <Link to="new" className="no-underline block p-2 ml-7 text-base text-greew-300">
+            + Nova nota
           </Link>
 
-          <hr />
+          {/* <hr /> */}
 
           {data.noteListItems.length === 0 ? (
-            <p className="p-4">No notes yet</p>
+            <p className="p-2">Nenhuma nota ainda</p>
           ) : (
             <ol>
               {data.noteListItems.map((note) => (
                 <li key={note.id}>
                   <NavLink
                     className={({ isActive }) =>
-                      `block border-b p-4 text-xl ${isActive ? "bg-white" : ""}`
+                      `block no-underline p-1 text-base ${isActive ? "text-cyan-600" : ""}`
                     }
                     to={note.id}
                   >
-                    📝 {note.title}
+                     {note.title}
                   </NavLink>
                 </li>
               ))}
